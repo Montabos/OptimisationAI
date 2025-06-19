@@ -54,7 +54,7 @@ for s in suppliers:
         icon=folium.Icon(color="blue"),
     ).add_to(m)
 
-# === Fonction pour tracer les flux plateforme → client ===
+# === Fonction pour tracer les flux plateforme → client (épaisseur = volume) ===
 def plot_product(product_filter=None):
     for _, row in baseline_ptf_cust.iterrows():
         ptf = row["GeoPoint#Name"]
@@ -75,7 +75,7 @@ def plot_product(product_filter=None):
                     folium.PolyLine(
                         locations=[coord[ptf], coord[cust]],
                         color="green",
-                        weight=3,
+                        weight=max(1, volume / 100),  # épaisseur proportionnelle au volume
                         popup=f"{ptf} → {cust} | Produit : {prod} | Volume : {volume}"
                     ).add_to(m)
 
@@ -84,4 +84,23 @@ plot_product()
 
 # === Flux fournisseurs → plateformes (lignes bleues) ===
 baseline_f2ptf = baseline_df[
-    (baseline_df["Sit]()_
+    (baseline_df["SiteType#Name"] == "Supplier") &
+    (baseline_df["SiteType_1#Name"] == "Plateform")
+]
+
+for _, row in baseline_f2ptf.iterrows():
+    supplier = row["GeoPoint#Name"]
+    ptf = row["GeoPoint_1#Name"]
+    folium.PolyLine(
+        locations=[coord[supplier], coord[ptf]],
+        color="blue",
+        weight=3,  # ici je laisse fixe (tu peux aussi faire en fonction du volume si tu veux)
+        popup=f"{supplier} → {ptf}"
+    ).add_to(m)
+
+# === Sauvegarde de la carte ===
+map_filename = "base_line_map2.html"
+m.save(map_filename)
+
+# === Ouvre la carte dans ton navigateur (VS Code local) ===
+webbrowser.open(map_filename)
