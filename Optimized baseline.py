@@ -202,3 +202,55 @@ for (s, p, r), var in y.items():
 map_filename = "optimized_baseline_map.html"
 m.save(map_filename)
 webbrowser.open(map_filename)
+
+
+# ─────────────────────── 8. BAR CHART DES COÛTS OPTIMISÉS ──────────────────────────
+import matplotlib.pyplot as plt
+
+# Recalcul des coûts par catégorie
+transport_cost_cli = sum(
+    trans_ptf_cli.get((p,c), 1e9) * var.varValue
+    for (p,c,pr), var in x.items()
+    if var.varValue > 1e-5
+)
+
+transport_cost_sup = sum(
+    trans_sup_ptf.get((s,p), 1e9) * var.varValue
+    for (s,p,r), var in y.items()
+    if var.varValue > 1e-5
+)
+
+production_cost_total = sum(
+    prod_cost[p] * var.varValue
+    for (p,c,pr), var in x.items()
+    if var.varValue > 1e-5
+)
+
+purchase_cost_total = sum(
+    purch_cost[(s,r)] * var.varValue
+    for (s,p,r), var in y.items()
+    if var.varValue > 1e-5
+)
+
+# Total transport
+transport_cost_total = transport_cost_cli + transport_cost_sup
+
+# Bar chart
+categories = ["Transport", "Production", "Purchase"]
+values     = [transport_cost_total, production_cost_total, purchase_cost_total]
+
+plt.figure(figsize=(7,4))
+plt.bar(categories, values, color=["skyblue","lightgreen","salmon"])
+plt.ylabel("€")
+plt.title("Coûts globaux optimisés par catégorie")
+plt.tight_layout()
+plt.show()
+
+# Impression
+print("\n=== Coûts optimisés détaillés ===")
+print(f"Transport client  : {transport_cost_cli:,.0f} €")
+print(f"Transport supplier: {transport_cost_sup:,.0f} €")
+print(f"Transport total   : {transport_cost_total:,.0f} €")
+print(f"Production        : {production_cost_total:,.0f} €")
+print(f"Purchase          : {purchase_cost_total:,.0f} €")
+print(f"Total optimisé    : {transport_cost_total + production_cost_total + purchase_cost_total:,.0f} €")
